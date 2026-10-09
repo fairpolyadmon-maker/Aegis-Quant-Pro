@@ -4,6 +4,15 @@
 
 ---
 
+### 📥 DIRECT DOWNLOAD FOR WINDOWS
+
+[![Download AegisQuantPro.exe](https://img.shields.io/badge/Download-AegisQuantPro.exe_(v1.0.0)-22c55e?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/fairpolyadmon-maker/Aegis-Quant-Pro/releases/download/v1.0.0/AegisQuantPro.exe)
+
+> **🚀 Click the green badge above to directly download `AegisQuantPro.exe` (10 MB Standalone Windows Executable)!**
+> No installation or Python required. Simply double-click and run in floating mode over your trading charts!
+
+---
+
 ## 🌟 Key Features
 
 * **🛡️ Absolute Capital Protection**: Calculates exact stake allocation based on remaining trades and wins to protect portfolio balance.
@@ -35,10 +44,11 @@
 ## 🚀 How to Run
 
 ### Method 1: Desktop Executable (`.exe`)
-Double-click **`AegisQuantPro.exe`** (or run `Start_Floating_App.bat`). No Python or external dependencies required!
+1. Download [AegisQuantPro.exe](https://github.com/fairpolyadmon-maker/Aegis-Quant-Pro/releases/download/v1.0.0/AegisQuantPro.exe).
+2. Double-click to run immediately on Windows!
 
 ### Method 2: Web App (`.html`)
-Open **`standalone_app.html`** in any web browser.
+Open [standalone_app.html](standalone_app.html) in any web browser.
 
 ---
 
