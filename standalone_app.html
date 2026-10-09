@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Masaniello Trader (User Custom Win Target & Profit %)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    :root {
+      --bg: #0b0f19;
+      --card: #151d2a;
+      --card-border: #233146;
+      --accent: #38bdf8;
+      --win: #22c55e;
+      --loss: #ef4444;
+      --text: #f8fafc;
+      --subtext: #94a3b8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
+    body { background: var(--bg); color: var(--text); padding: 8px; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+    .app-container { width: 100%; max-width: 340px; background: var(--card); border: 1px solid var(--card-border); border-radius: 12px; padding: 10px; box-shadow: 0 15px 30px rgba(0,0,0,0.6); }
+    .header { text-align: center; margin-bottom: 8px; border-bottom: 1px solid var(--card-border); padding-bottom: 4px; }
+    .header h1 { font-size: 0.95rem; color: var(--accent); display: flex; align-items: center; justify-content: center; gap: 6px; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-bottom: 8px; }
+    .input-group { display: flex; flex-direction: column; gap: 2px; }
+    .input-group label { font-size: 0.65rem; color: var(--subtext); font-weight: 700; text-transform: uppercase; }
+    .input-group input, .input-group select { background: #0b0f19; border: 1px solid var(--card-border); border-radius: 6px; padding: 3px 6px; color: var(--text); font-size: 0.8rem; outline: none; }
+    .input-group input:focus, .input-group select:focus { border-color: var(--accent); }
+    .btn-start { grid-column: 1 / -1; background: #0284c7; color: #fff; border: none; padding: 5px; border-radius: 6px; font-size: 0.8rem; font-weight: 700; cursor: pointer; transition: 0.2s; margin-top: 2px; }
+    .btn-start:hover { background: #0369a1; }
+    .stake-box { background: #0b0f19; border: 2px solid var(--win); border-radius: 8px; text-align: center; padding: 8px; margin-bottom: 8px; position: relative; }
+    .stake-step { font-size: 0.7rem; color: var(--subtext); text-transform: uppercase; font-weight: 700; margin-bottom: 2px; }
+    .stake-row { display: flex; align-items: center; justify-content: center; gap: 6px; }
+    .stake-val { font-size: 2rem; font-weight: 800; color: var(--win); letter-spacing: -1px; }
+    .btn-copy { background: #334155; color: var(--accent); border: none; padding: 3px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: 700; cursor: pointer; }
+    .btn-copy:hover { background: #475569; color: #fff; }
+    .stake-lbl { font-size: 0.65rem; color: var(--accent); font-weight: 700; text-transform: uppercase; margin-top: 2px; margin-bottom: 4px; }
+    
+    /* Next Trade Predictions Grid */
+    .pred-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-top: 4px; text-align: left; }
+    .pred-box-win { background: #064e3b; border: 1px solid #10b981; border-radius: 6px; padding: 4px 6px; }
+    .pred-box-loss { background: #7f1d1d; border: 1px solid #f43f5e; border-radius: 6px; padding: 4px 6px; }
+    .pred-title-win { font-size: 0.65rem; color: #6ee7b7; font-weight: 800; text-transform: uppercase; }
+    .pred-title-loss { font-size: 0.65rem; color: #fca5a5; font-weight: 800; text-transform: uppercase; }
+    .pred-val { font-size: 0.85rem; font-weight: 800; color: #ffffff; margin: 1px 0; }
+    .pred-sub { font-size: 0.65rem; color: #e2e8f0; opacity: 0.9; }
+
+    .actions { display: grid; grid-template-columns: 1fr 1fr 40px; gap: 4px; margin-bottom: 8px; }
+    .btn-act { border: none; padding: 8px; border-radius: 6px; font-size: 0.85rem; font-weight: 800; cursor: pointer; }
+    .btn-win { background: var(--win); color: #fff; }
+    .btn-win:hover { background: #16a34a; }
+    .btn-loss { background: var(--loss); color: #fff; }
+    .btn-loss:hover { background: #dc2626; }
+    .btn-undo { background: #334155; color: #fff; font-size: 0.75rem; }
+    .btn-undo:hover { background: #475569; }
+    .stats-card { background: #0b0f19; border-radius: 6px; padding: 6px; margin-bottom: 8px; font-size: 0.7rem; }
+    .stats-row { display: flex; justify-content: space-between; margin-bottom: 2px; }
+    .pbar-bg { width: 100%; height: 5px; background: #1e293b; border-radius: 3px; overflow: hidden; margin-top: 2px; }
+    .pbar-fill { height: 100%; background: var(--win); width: 0%; transition: width 0.3s; }
+    .table-box { max-height: 120px; overflow-y: auto; border: 1px solid var(--card-border); border-radius: 6px; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.7rem; text-align: right; }
+    th, td { padding: 3px 5px; border-bottom: 1px solid var(--card-border); }
+    th { background: #0b0f19; color: var(--subtext); text-transform: uppercase; font-size: 0.6rem; position: sticky; top: 0; }
+    td:first-child, th:first-child { text-align: center; }
+    .badge-win { color: var(--win); font-weight: 700; }
+    .badge-loss { color: var(--loss); font-weight: 700; }
+    .toast { position: absolute; top: 4px; right: 8px; font-size: 0.65rem; background: var(--win); color: #fff; padding: 1px 4px; border-radius: 3px; display: none; }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <div class="header">
+      <h1>⚡ Masaniello Trader</h1>
+    </div>
+    
+    <div class="grid">
+      <div class="input-group">
+        <label>Capital</label>
+        <input type="number" id="capital" value="58" oninput="initSession()">
+      </div>
+      <div class="input-group">
+        <label>Currency</label>
+        <select id="currency" onchange="updateUI()">
+          <option value="$">$ (USD)</option>
+          <option value="৳">৳ (BDT)</option>
+          <option value="€">€ (EUR)</option>
+          <option value="₹">₹ (INR)</option>
+        </select>
+      </div>
+      <div class="input-group">
+        <label>Trades (N)</label>
+        <input type="number" id="trades" value="15" max="15" oninput="initSession()">
+      </div>
+      <div class="input-group">
+        <label>Wins (K)</label>
+        <input type="number" id="wins" value="5" style="font-weight:700;" oninput="initSession()">
+      </div>
+      <div class="input-group">
+        <label>Target Prof %</label>
+        <input type="number" id="profitPct" value="20" style="color:var(--accent); font-weight:700;" oninput="initSession()">
+      </div>
+      <div class="input-group">
+        <label>Payout %</label>
+        <input type="number" id="odds" value="75" style="color:var(--win); font-weight:700;" oninput="initSession()">
+      </div>
+      <div class="input-group" style="grid-column: 1 / -1; flex-direction:row; align-items:center; gap:4px; margin-top:2px;">
+        <input type="checkbox" id="chkAutoCopy" checked style="width:13px; height:13px;">
+        <label for="chkAutoCopy" style="text-transform:none; font-size:0.7rem; cursor:pointer;">Auto-Copy Next Stake</label>
+      </div>
+      <button class="btn-start" onclick="initSession()">🚀 START SESSION</button>
+    </div>
+
+    <div class="stake-box">
+      <div class="toast" id="toastCopy">✓ Copied!</div>
+      <div class="stake-step" id="stepInfo">Trade #1 of 15</div>
+      <div class="stake-row">
+        <div class="stake-val" id="stakeVal">$4</div>
+        <button class="btn-copy" onclick="copyStake()">📋 Copy</button>
+      </div>
+      <div class="stake-lbl" id="stakeDesc">👉 SUGGESTED STAKE (EXACT EXCEL)</div>
+
+      <!-- Scenarios Grid -->
+      <div class="pred-grid">
+        <div class="pred-box-win">
+          <div class="pred-title-win">🟢 IF WIN NEXT</div>
+          <div class="pred-val" id="winPredStake">Trade: $4</div>
+          <div class="pred-sub" id="winPredBal">Bal: $61</div>
+        </div>
+        <div class="pred-box-loss">
+          <div class="pred-title-loss">🔴 IF LOSS NEXT</div>
+          <div class="pred-val" id="lossPredStake">Trade: $4</div>
+          <div class="pred-sub" id="lossPredBal">Bal: $54</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="btn-act btn-win" onclick="recordTrade('W')">WIN (W)</button>
+      <button class="btn-act btn-loss" onclick="recordTrade('L')">LOSS (L)</button>
+      <button class="btn-act btn-undo" onclick="undoTrade()">↩</button>
+    </div>
+
+    <div class="stats-card">
+      <div class="stats-row">
+        <span>Bal: <strong id="currBal">$58</strong></span>
+        <span>Target: <strong id="targetCap" style="color:var(--accent)">$69.60</strong></span>
+      </div>
+      <div class="stats-row" style="color:var(--subtext);">
+        <span id="winCountInfo">Wins: 0/5</span>
+        <span id="lossCountInfo">Losses: 0/10</span>
+      </div>
+      <div class="pbar-bg">
+        <div class="pbar-fill" id="pbarFill"></div>
+      </div>
+    </div>
+
+    <div class="table-box">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Res</th>
+            <th>Trade</th>
+            <th>P&L</th>
+            <th>Bal</th>
+          </tr>
+        </thead>
+        <tbody id="historyBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    let session = { B_init: 58, N: 15, K: 5, profit_pct: 20.0, payout_pct: 75.0, Q: 1.75, V: [], scaleFactor: 1.0, history: [] };
+    let audioCtx = null;
+
+    function playTone(freq, type, duration) {
+      try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        let osc = audioCtx.createOscillator();
+        let gain = audioCtx.createGain();
+        osc.type = type || 'sine';
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
+      } catch (e) {}
+    }
+
+    function playSound(type) {
+      if (type === 'win') {
+        playTone(900, 'sine', 0.12);
+        setTimeout(() => playTone(1300, 'sine', 0.18), 120);
+      } else if (type === 'loss') {
+        playTone(400, 'sawtooth', 0.25);
+      } else if (type === 'target_win') {
+        playTone(700, 'triangle', 0.15);
+        setTimeout(() => playTone(900, 'triangle', 0.15), 150);
+        setTimeout(() => playTone(1200, 'triangle', 0.30), 300);
+      }
+    }
+
+    function buildMatrix(N, K, Q) {
+      let V = Array.from({ length: N + 2 }, () => Array(K + 2).fill(0.0));
+      for (let w = 0; w <= K; w++) {
+        if (w >= K) {
+          for (let m = 0; m <= N; m++) V[m][w] = 1.0;
+        } else {
+          V[N][w] = 0.0;
+        }
+      }
+      for (let m = N - 1; m >= 0; m--) {
+        for (let w = K - 1; w >= 0; w--) {
+          let remTrades = N - m;
+          let remWins = K - w;
+          if (remWins === remTrades) {
+            V[m][w] = Math.pow(Q, remTrades);
+          } else if (remWins > remTrades) {
+            V[m][w] = 0.0;
+          } else {
+            let v_loss = V[m + 1][w];
+            let v_win = V[m + 1][w + 1];
+            let denom = v_loss + (Q - 1.0) * v_win;
+            V[m][w] = denom !== 0 ? (Q * v_loss * v_win) / denom : 0.0;
+          }
+        }
+      }
+      return V;
+    }
+
+    function initSession() {
+      let cap = parseFloat(document.getElementById('capital').value);
+      let N = Math.min(100, Math.max(1, parseInt(document.getElementById('trades').value)));
+      let K = Math.min(N, Math.max(1, parseInt(document.getElementById('wins').value)));
+      let quotaVal = parseFloat(document.getElementById('odds').value);
+      let customProf = parseFloat(document.getElementById('profitPct').value);
+
+      if (isNaN(cap) || isNaN(N) || isNaN(K) || isNaN(quotaVal)) return;
+
+      let Q = quotaVal > 10.0 ? (1.0 + quotaVal / 100.0) : quotaVal;
+      let V = buildMatrix(N, K, Q);
+      let natYield = (V[0][0] - 1.0) * 100.0;
+      
+      let scaleFactor = 1.0;
+      let effectiveYield = natYield;
+      let targetCap = cap * V[0][0];
+
+      if (!isNaN(customProf) && customProf > 0) {
+        scaleFactor = natYield > 0 ? (customProf / natYield) : 1.0;
+        effectiveYield = customProf;
+        targetCap = cap * (1.0 + customProf / 100.0);
+      }
+
+      session = { B_init: cap, N: N, K: K, Q: Q, V: V, targetCap: targetCap, yieldPct: effectiveYield, scaleFactor: scaleFactor, history: [] };
+      updateUI();
+    }
+
+    function getState() {
+      let bal = session.B_init, wins = 0, losses = 0;
+      for (let item of session.history) {
+        let tradeStake = item.raw_stake;
+        if (item.result === 'W') {
+          bal += tradeStake * (session.Q - 1.0);
+          wins++;
+        } else {
+          bal -= tradeStake;
+          losses++;
+        }
+      }
+      return { bal, wins, losses };
+    }
+
+    function getStakeAtState(bal, wins, losses) {
+      let m = wins + losses, w = wins;
+      if (wins >= session.K) return { roundedStake: 0, rawStake: 0, isDone: true };
+      if (losses > (session.N - session.K) || m >= session.N) return { roundedStake: 0, rawStake: 0, isDone: true };
+
+      let v_win_next = session.V[m + 1][w + 1];
+      let v_loss_next = session.V[m + 1][w];
+      let denom = v_loss_next + (session.Q - 1.0) * v_win_next;
+      if (denom === 0) return { roundedStake: 0, rawStake: 0, isDone: true };
+
+      let ratio = 1.0 - (session.Q * v_win_next / denom);
+      let rawStake = ratio * bal * session.scaleFactor;
+      let roundedStake = Math.round(rawStake);
+      if (rawStake > 0 && roundedStake < 1) roundedStake = 1;
+
+      return { roundedStake, rawStake, isDone: false };
+    }
+
+    function getNextStake() {
+      let { bal, wins, losses } = getState();
+      return getStakeAtState(bal, wins, losses);
+    }
+
+    function getWinLossPredictions() {
+      let { bal, wins, losses } = getState();
+      let { roundedStake, rawStake, isDone } = getNextStake();
+      if (isDone || rawStake <= 0) return { winPred: null, lossPred: null };
+
+      let balWin = bal + rawStake * (session.Q - 1.0);
+      let winPred = getStakeAtState(balWin, wins + 1, losses);
+      winPred.bal = balWin;
+
+      let balLoss = bal - rawStake;
+      let lossPred = getStakeAtState(balLoss, wins, losses + 1);
+      lossPred.bal = balLoss;
+
+      return { winPred, lossPred };
+    }
+
+    function copyStake() {
+      let { roundedStake, rawStake, isDone } = getNextStake();
+      if (!isDone && rawStake > 0) {
+        navigator.clipboard.writeText(rawStake.toFixed(2)).then(() => {
+          let t = document.getElementById('toastCopy');
+          t.style.display = 'block';
+          setTimeout(() => { t.style.display = 'none'; }, 1000);
+        });
+      }
+    }
+
+    function recordTrade(res) {
+      let { roundedStake, rawStake, isDone } = getNextStake();
+      if (isDone || rawStake <= 0) return;
+      let { bal } = getState();
+      let tradeStake = rawStake;
+      let pnl = res === 'W' ? tradeStake * (session.Q - 1.0) : -tradeStake;
+      session.history.push({ step: session.history.length + 1, result: res, stake: roundedStake, raw_stake: tradeStake, pnl: pnl, balance: bal + pnl });
+      
+      let newState = getState();
+      let nextState = getNextStake();
+      if (nextState.isDone) {
+        if (newState.wins >= session.K) playSound('target_win');
+      } else {
+        playSound(res === 'W' ? 'win' : 'loss');
+      }
+
+      updateUI();
+      if (document.getElementById('chkAutoCopy').checked && !nextState.isDone && nextState.rawStake > 0) {
+        copyStake();
+      }
+    }
+
+    function undoTrade() {
+      if (session.history.length > 0) {
+        session.history.pop();
+        updateUI();
+      }
+    }
+
+    function updateUI() {
+      let cs = document.getElementById('currency').value;
+      let { bal, wins, losses } = getState();
+      let { roundedStake, rawStake, isDone } = getNextStake();
+      let { winPred, lossPred } = getWinLossPredictions();
+
+      let m = wins + losses;
+      let targetCapStr = session.targetCap.toFixed(2);
+      let currBalStr = bal.toFixed(2);
+
+      document.getElementById('stepInfo').innerText = isDone ? "SESSION COMPLETED" : `Trade #${m + 1} of ${session.N}`;
+
+      let stakeBox = document.getElementById('stakeVal');
+      if (isDone) {
+        if (wins >= session.K) {
+          stakeBox.innerText = "TARGET WON! 🎉";
+          stakeBox.style.color = "var(--win)";
+          stakeBox.style.fontSize = "1.3rem";
+        } else {
+          stakeBox.innerText = "TARGET FAILED ❌";
+          stakeBox.style.color = "var(--loss)";
+          stakeBox.style.fontSize = "1.3rem";
+        }
+        document.getElementById('winPredStake').innerText = "Done";
+        document.getElementById('winPredBal').innerText = `Bal: ${cs}${currBalStr}`;
+        document.getElementById('lossPredStake').innerText = "Done";
+        document.getElementById('lossPredBal').innerText = `Bal: ${cs}${currBalStr}`;
+      } else {
+        stakeBox.innerText = cs + rawStake.toFixed(2);
+        stakeBox.style.color = "var(--win)";
+        stakeBox.style.fontSize = "1.8rem";
+
+        if (winPred && lossPred) {
+          document.getElementById('winPredStake').innerText = winPred.isDone ? "Target Won 🎉" : `Trade: ${cs}${winPred.rawStake.toFixed(2)}`;
+          document.getElementById('winPredBal').innerText = `Bal: ${cs}${winPred.bal.toFixed(2)}`;
+
+          document.getElementById('lossPredStake').innerText = lossPred.isDone ? "Seq End" : `Trade: ${cs}${lossPred.rawStake.toFixed(2)}`;
+          document.getElementById('lossPredBal').innerText = `Bal: ${cs}${lossPred.bal.toFixed(2)}`;
+        }
+      }
+
+      document.getElementById('currBal').innerText = cs + currBalStr;
+      document.getElementById('targetCap').innerText = cs + targetCapStr + ` (+${session.yieldPct.toFixed(1)}%)`;
+      document.getElementById('winCountInfo').innerText = `Wins: ${wins}/${session.K}`;
+      document.getElementById('lossCountInfo').innerText = `Losses: ${losses}/${session.N - session.K}`;
+      
+      let pPct = Math.min(100, (wins / session.K) * 100);
+      document.getElementById('pbarFill').style.width = pPct + "%";
+
+      let tbody = document.getElementById('historyBody');
+      tbody.innerHTML = "";
+      for (let item of session.history) {
+        let tr = document.createElement('tr');
+        let pnlStr = item.pnl >= 0 ? `+${cs}${item.pnl.toFixed(2)}` : `-${cs}${Math.abs(item.pnl).toFixed(2)}`;
+        tr.innerHTML = `
+          <td>${item.step}</td>
+          <td class="${item.result === 'W' ? 'badge-win' : 'badge-loss'}">${item.result === 'W' ? 'WIN' : 'LOSS'}</td>
+          <td>${cs}${item.raw_stake.toFixed(2)}</td>
+          <td class="${item.pnl >= 0 ? 'badge-win' : 'badge-loss'}">${pnlStr}</td>
+          <td>${cs}${item.balance.toFixed(2)}</td>
+        `;
+        tbody.appendChild(tr);
+      }
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'w' || e.key === 'W') recordTrade('W');
+      if (e.key === 'l' || e.key === 'L') recordTrade('L');
+      if (e.ctrlKey && (e.key === 'z' || e.key === 'Z')) undoTrade();
+    });
+
+    initSession();
+  </script>
+</body>
+</html>
